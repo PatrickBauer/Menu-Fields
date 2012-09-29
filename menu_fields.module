@@ -1,0 +1,145 @@
+<?php
+
+/**
+ * Main module file 
+ * Used for general hook implementations
+ * Seperated into hooks and custom functions
+ */
+
+
+//------ HOOKS
+
+/**
+ * Implementation of hook_entity_info()
+ * Registers the menufields entity type
+ * 
+ * @return array containing all entitiy options
+ */
+ 
+function menu_fields_entity_info() {
+  $options = array(
+    'menu_fields' => array(
+      'label' => 'Menu Fields',
+      'controller class' => 'EntityAPIController',
+      'views controller class' => 'EntityDefaultViewsController',
+      'base table' => 'menu_fields',
+      'fieldable' => TRUE,
+      'static cache' => TRUE,
+      'translation' => array(),
+      'entity keys' => array(
+        'id' => 'mfid',
+      ),
+      'bundles' => array(),
+      'view modes' => array()
+    )
+  );
+
+  $options['menu_fields']['bundles']['menu_fields'] = array(
+    'label' => 'Default',
+    'admin' => array(
+      'path' => 'admin/structure/menu/settings',
+    ),
+  );
+
+  return $options;
+}
+
+/** 
+ * Implementation of hook_form_alter()
+ * Used to extend the menulink edit form with the custom entity form
+ */
+function menu_fields_form_menu_edit_item_alter(&$form, &$form_state) {
+  //add wrapping fieldset  
+  $form['menu_fields'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Menu Fields'),
+    '#tree' => TRUE,
+    '#parents' => array('menu_fields'),
+  );
+  
+  //get mfid
+  $mfid = (isset($form['original_item']['#value']['mfid'])) ? $form['original_item']['#value']['mfid'] : 0;
+
+  //load entity and attach entity form
+  $entity = entity_load('menu_fields', array($mfid));
+  field_attach_form('menu_fields', ($mfid) ? $entity[$mfid] : array(), $form['menu_fields'], $form_state);
+
+  //add custom submit function to save entity values
+  $form['#submit'][] = 'menu_fields_form_menu_edit_item_submit';
+}
+
+/** 
+ * Implementation of hook_form_submit()
+ */
+function menu_fields_form_menu_edit_item_submit(&$form, &$form_state) {  
+
+  if(!isset($form_state['complete form']['original_item']['#value']['mfid']) || $form_state['complete form']['original_item']['#value']['mfid'] == 0) {
+    //new entity
+    $save = (object) array('mfid' => NULL, 'mlid' => $form_state['values']['mlid']);
+    drupal_write_record('menu_fields', $save);
+
+    db_update('menu_links')
+      ->fields(array('mfid' => $save->mfid))
+      ->condition('mlid', $form_state['values']['mlid'])
+      ->execute();
+      
+    field_attach_submit('menu_fields', $save, $form['menu_fields'], $form_state);
+    field_attach_insert('menu_fields', $save);
+  } else {
+    //update old entity fields
+    $save = (object)array('mfid' => $form_state['complete form']['original_item']['#value']['mfid'], 'mlid' => $form_state['values']['mlid']);
+    
+    field_attach_submit('menu_fields', $save, $form['menu_fields'], $form_state);
+    field_attach_update('menu_fields', $save);
+  }  
+}
+ 
+/**
+ * Implementation of hook_menu()
+ * Defines all needed paths to access the menufields administration
+ * 
+ * @return array containing all new paths
+ */
+function menu_fields_menu() {
+  $items = array();  
+  
+  $items['admin/structure/menu/settings/edit'] = array(
+    'title' => 'Edit',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  
+  return $items;
+}
+
+/**
+ * Implementation of hook_permissions()
+ * Defines standard permissions to administer and use menufields
+ * 
+ * @return array containing standard permissions
+ */
+function menu_fields_permission() {
+  return array();
+}
+
+/**
+ * Implemenation of hook_theme()
+ * Registers all needed theme functions
+ * 
+ * @return array containing all needed theme functions
+ */
+function menu_fields_theme() {
+  return array();
+}
+
+/**
+ * Implementation of hook_views_api()
+ * Defines our module as views 3 plugins
+ */
+function menu_fields_views_api() {
+  return array(
+    'api' => 3, 
+    'path' => drupal_get_path('module', 'menu_fields') . '/views', 
+  );
+}
+
+//------ CUSTOM FUNCTIONS

@@ -1,0 +1,9 @@
+name = Menu Fields
+description = Provides an easy way to attach fields to single menu links
+core = 7.x
+package = Other
+
+dependencies[] = field_ui
+dependencies[] = entity
+
+files[] = views/views_plugin_current_mlid.inc

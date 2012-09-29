@@ -1,0 +1,74 @@
+<?php
+
+/**
+ * Installation File 
+ * Used to install and uninstall the needed database tables
+ */
+
+
+/**
+ * Implementation of hook_schema()
+ * Inserts all needed module tables into the database
+ */
+function menu_fields_schema() {
+  $schema['menu_fields'] = array (
+    'description' => 'The base table for the entity',
+    'fields' => array(
+      'mfid' => array(
+        'description' => 'Primary key for our menufields enitity',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'mlid' => array(
+        'description' => 'The corresponding menulink id',
+        'type' => 'int',
+        'size' => 'normal',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('mfid'),
+  );
+  
+  return $schema;
+}
+
+/**
+ * Implementation of hook_schema_alter()
+ * Alter the menu table and add another column
+ */
+function menu_fields_schema_alter(&$schema) {
+  // Add field to existing schema.
+  $schema['menu_links']['fields']['mfid'] = array(
+    'type' => 'int', 
+    'size' => 'normal',
+    'not null' => TRUE, 
+    'default' => 0, 
+    'description' => 'Foreign key for corresponding menufields id',
+  );
+}
+
+
+/**
+* Implementation of hook_install().
+*/
+function menu_fields_install() {
+  $schema['menu_links'] = array();
+  menu_fields_schema_alter($schema);
+  foreach ($schema['menu_links']['fields'] as $name => $spec) {
+    db_add_field('menu_links', $name, $spec);
+  }
+}
+
+/**
+* Implementation of hook_uninstall().
+*/
+function menu_fields_uninstall() {
+  $schema['menu_links'] = array();
+  menu_fields_schema_alter($schema);
+  foreach ($schema['menu_links']['fields'] as $name => $spec) {
+    db_drop_field('menu_links', $name);
+  }
+}
+
