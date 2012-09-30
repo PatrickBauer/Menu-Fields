@@ -4,6 +4,7 @@ core = 7.x
 package = Other
 
 dependencies[] = field_ui
+dependencies[] = menu
 dependencies[] = entity
 
 files[] = views/views_plugin_current_mlid.inc
