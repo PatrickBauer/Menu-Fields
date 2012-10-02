@@ -50,7 +50,7 @@ function menu_fields_schema_alter(&$schema) {
   
   $schema['menu_links']['fields']['mf_enabled'] = array(
     'type' => 'int', 
-    'size' => 'short',
+    'size' => 'tiny',
     'not null' => TRUE, 
     'default' => 0, 
     'description' => 'Boolean to indicate if menu fields is enabled for this particular menulink',

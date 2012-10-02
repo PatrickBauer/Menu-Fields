@@ -38,6 +38,16 @@ function menu_fields_entity_info() {
  * Used to extend the menulink edit form with the custom entity form
  */
 function menu_fields_form_menu_edit_item_alter(&$form, &$form_state) {
+  //get status
+  $mf_enabled = (isset($form['original_item']['#value']['mf_enabled'])) ? $form['original_item']['#value']['mf_enabled'] : 0;
+    
+  //add enable/disable checkbox
+  $form['menu_fields']['mf_enabled'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enabled'),
+      '#default_value' => $mf_enabled,
+    );
+
   //add wrapping fieldset  
   $form['menu_fields'] = array(
     '#type' => 'fieldset',
@@ -60,7 +70,7 @@ function menu_fields_form_menu_edit_item_alter(&$form, &$form_state) {
 /** 
  * Implementation of hook_form_submit()
  */
-function menu_fields_form_menu_edit_item_submit(&$form, &$form_state) {  
+function menu_fields_form_menu_edit_item_submit(&$form, &$form_state) {
 
   if(!isset($form_state['complete form']['original_item']['#value']['mfid']) || $form_state['complete form']['original_item']['#value']['mfid'] == 0) {
     //new entity
@@ -80,7 +90,13 @@ function menu_fields_form_menu_edit_item_submit(&$form, &$form_state) {
     
     field_attach_submit('menu_fields', $save, $form['menu_fields'], $form_state);
     field_attach_update('menu_fields', $save);
-  }  
+  }
+  
+  //update status
+  db_update('menu_links')
+    ->fields(array('mf_enabled' => $form_state['values']['menu_fields']['mf_enabled']))
+    ->condition('mlid', $save->mlid)
+    ->execute();
 }
  
 /**
