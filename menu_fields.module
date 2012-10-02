@@ -157,7 +157,7 @@ function menu_fields_permission() {
   return array(
     'administer menu fields' => array(
       'title' => t('Administer menu fields'),
-      'description' => t('Edit the fields and displays for menu fields. '),
+      'description' => t('Edit the fields and displays for menu fields.'),
     )
   );
 }
