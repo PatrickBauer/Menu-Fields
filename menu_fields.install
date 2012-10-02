@@ -20,6 +20,13 @@ function menu_fields_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
+      'ml_enabled' => array(
+        'description' => 'The corresponding menulink id',
+        'type' => 'int',
+        'size' => 'normal',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
     ),
     'primary key' => array('mfid'),
   );
@@ -39,6 +46,14 @@ function menu_fields_schema_alter(&$schema) {
     'not null' => TRUE, 
     'default' => 0, 
     'description' => 'Foreign key for corresponding menufields id',
+  );
+  
+  $schema['menu_links']['fields']['mf_enabled'] = array(
+    'type' => 'int', 
+    'size' => 'short',
+    'not null' => TRUE, 
+    'default' => 0, 
+    'description' => 'Boolean to indicate if menu fields is enabled for this particular menulink',
   );
 }
 

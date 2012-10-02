@@ -64,7 +64,7 @@ function menu_fields_form_menu_edit_item_submit(&$form, &$form_state) {
 
   if(!isset($form_state['complete form']['original_item']['#value']['mfid']) || $form_state['complete form']['original_item']['#value']['mfid'] == 0) {
     //new entity
-    $save = (object) array('mfid' => NULL);
+    $save = (object) array('mfid' => NULL, 'mlid' => $form_state['values']['mlid']);
     drupal_write_record('menu_fields', $save);
 
     db_update('menu_links')
@@ -76,7 +76,7 @@ function menu_fields_form_menu_edit_item_submit(&$form, &$form_state) {
     field_attach_insert('menu_fields', $save);
   } else {
     //update old entity fields
-    $save = (object) array('mfid' => $form_state['complete form']['original_item']['#value']['mfid']);
+    $save = (object) array('mfid' => $form_state['complete form']['original_item']['#value']['mfid'], 'mlid' => $form_state['values']['mlid']);
     
     field_attach_submit('menu_fields', $save, $form['menu_fields'], $form_state);
     field_attach_update('menu_fields', $save);

@@ -10,7 +10,7 @@
     
     rsort($menu);
     foreach($menu as $item) {
-      if(isset($item['mfid']) && intval($item['mfid']) > 0) {
+      if(isset($item['mf_enabled']) && $item['mf_enabled'] && isset($item['mfid']) && $item['mfid'] > 0) {
         return $item['mfid'];
       }
     }
