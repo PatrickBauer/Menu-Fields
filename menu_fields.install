@@ -54,6 +54,13 @@ function menu_fields_schema_alter(&$schema) {
     'default' => 0, 
     'description' => 'Boolean to indicate if menu fields is enabled for this particular menulink',
   );
+  
+  $schema['menu_links']['fields']['mf_override'] = array(
+    'type' => 'int', 
+    'size' => 'tiny',
+    'default' => 0, 
+    'description' => 'Boolean to indicate if menu fields status is overridden',
+  );
 }
 
 
@@ -77,5 +84,8 @@ function menu_fields_uninstall() {
   foreach ($schema['menu_links']['fields'] as $name => $spec) {
     db_drop_field('menu_links', $name);
   }
+  
+  //delete all data
+  field_attach_delete_bundle('menu_fields', 'menu_fields');
 }
 

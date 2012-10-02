@@ -8,8 +8,27 @@
   function get_argument() {
     $menu = menu_get_active_trail();
     
-    rsort($menu);
+    //sort backwards
+    rsort($menu); 
+   
+    //special links (e.g. user/%) -  check the menu links table for the request_path()
+    if(isset($menu[0]['mfid']) && !$menu[0]['mfid']) {
+      $query = db_select('menu_links', 'ml')
+                ->fields('ml')
+                ->condition('ml.link_path', request_path());
+ 
+      if ($item = $query->execute()->fetchAssoc()) {
+        $menu[0] = $item;
+      }
+    }
+   
     foreach($menu as $item) {
+      //check for override
+      if(isset($item['mf_override']) && $item['mf_override']) {
+        continue;
+      } 
+    
+      //if enabled and entity id found
       if(isset($item['mf_enabled']) && $item['mf_enabled'] && isset($item['mfid']) && $item['mfid'] > 0) {
         return $item['mfid'];
       }

@@ -4,8 +4,7 @@
  * Implementation of hook_entity_info()
  * Registers the menu_fields entity type
  */
- 
-function menu_fields_entity_info() {
+ function menu_fields_entity_info() {
   $options = array(
     'menu_fields' => array(
       'label' => 'Menu Fields',
@@ -23,7 +22,7 @@ function menu_fields_entity_info() {
   );
 
   $options['menu_fields']['bundles']['menu_fields'] = array(
-    'label' => 'Default',
+    'label' => 'Menu Fields',
     'admin' => array(
       'path' => 'admin/structure/menu/settings',
       'access arguments' => array('administer menu fields'),
@@ -38,16 +37,9 @@ function menu_fields_entity_info() {
  * Used to extend the menulink edit form with the custom entity form
  */
 function menu_fields_form_menu_edit_item_alter(&$form, &$form_state) {
-  //get current status
-  $mf_enabled = (isset($form['original_item']['#value']['mf_enabled'])) ? $form['original_item']['#value']['mf_enabled'] : 0;
+  //get current override status
+  $mf_override = (isset($form['original_item']['#value']['mf_override'])) ? $form['original_item']['#value']['mf_override'] : 0;
     
-  //add enable/disable checkbox
-  $form['mf_enabled'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Enable Menu Fields'),
-      '#default_value' => $mf_enabled,
-    );
-
   //add wrapping fieldset  
   $form['menu_fields'] = array(
     '#type' => 'fieldset',
@@ -56,6 +48,22 @@ function menu_fields_form_menu_edit_item_alter(&$form, &$form_state) {
     '#parents' => array('menu_fields'),
   );
   
+  //check if there are any fields assigned
+  $instances = field_read_instances(array('entity_type' => 'menu_fields', 'bundle' => 'menu_fields'));
+  if(!count($instances)) {
+    return $form['menu_fields']['markup'] = array(
+      '#markup' => t('There are no fields assigned yet. <a href="@manage-fields">Click here to add some fields.</a>', array('@manage-fields' => url('admin/structure/menu/settings/fields'))),
+    );
+  }
+ 
+  //add enable/disable checkbox
+  $form['mf_override'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Disable Menu Fields for this item (override)'),
+    '#description' => t('Menu Fields is automatically enabled for this link, if there are any values given. With this checkbox you can manually disable menu links for this item, even if values are available.'),
+    '#default_value' => $mf_override,
+  );
+ 
   //get mfid
   $mfid = (isset($form['original_item']['#value']['mfid'])) ? $form['original_item']['#value']['mfid'] : 0;
 
@@ -94,9 +102,35 @@ function menu_fields_form_menu_edit_item_submit(&$form, &$form_state) {
     field_attach_update('menu_fields', $save);
   }
   
+  //check if fields are empty
+  $instances = field_read_instances(array('entity_type' => 'menu_fields', 'bundle' => 'menu_fields'));
+  $enabled = 0;
+  
+  //run through all fields - if one is not empty, enable menu fields for this link
+  foreach($instances as $instance) {
+    $info = field_info_field($instance['field_name']);
+    $function = $info['module'] . '_field_is_empty';
+    
+    if (function_exists($function)) {
+      $value = field_get_items('menu_fields', $save, $instance['field_name']);
+      foreach($value as $val) {
+        if(!$function($val,$info)) {
+          $enabled = 1;
+          break;
+        }
+      }
+    }
+  }
+   
   //update status
   db_update('menu_links')
-    ->fields(array('mf_enabled' => $form_state['values']['mf_enabled']))
+    ->fields(array('mf_enabled' => $enabled)) //$form_state['values']['mf_enabled']
+    ->condition('mlid', $save->mlid)
+    ->execute();
+    
+  //update override status
+  db_update('menu_links')
+    ->fields(array('mf_override' => $form_state['values']['mf_override']))
     ->condition('mlid', $save->mlid)
     ->execute();
 }
