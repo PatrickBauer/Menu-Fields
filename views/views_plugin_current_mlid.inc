@@ -22,6 +22,7 @@
       }
     }
    
+    //run through each menu item (backwards) and try to find any entity (inheritance) 
     foreach($menu as $item) {
       //check for override
       if(isset($item['mf_override']) && $item['mf_override']) {
