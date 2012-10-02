@@ -122,15 +122,10 @@ function menu_fields_form_menu_edit_item_submit(&$form, &$form_state) {
     }
   }
    
-  //update status
+  //update status & override
   db_update('menu_links')
-    ->fields(array('mf_enabled' => $enabled)) //$form_state['values']['mf_enabled']
-    ->condition('mlid', $save->mlid)
-    ->execute();
-    
-  //update override status
-  db_update('menu_links')
-    ->fields(array('mf_override' => $form_state['values']['mf_override']))
+    ->fields(array('mf_enabled' => $enabled, 
+                   'mf_override' => $form_state['values']['mf_override']))
     ->condition('mlid', $save->mlid)
     ->execute();
 }
