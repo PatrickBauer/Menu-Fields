@@ -1,19 +1,8 @@
 <?php
-
-/**
- * Main module file 
- * Used for general hook implementations
- * Seperated into hooks and custom functions
- */
-
-
-//------ HOOKS
-
+ 
 /**
  * Implementation of hook_entity_info()
- * Registers the menufields entity type
- * 
- * @return array containing all entitiy options
+ * Registers the menu_fields entity type
  */
  
 function menu_fields_entity_info() {
@@ -25,7 +14,6 @@ function menu_fields_entity_info() {
       'base table' => 'menu_fields',
       'fieldable' => TRUE,
       'static cache' => TRUE,
-      'translation' => array(),
       'entity keys' => array(
         'id' => 'mfid',
       ),
@@ -38,6 +26,7 @@ function menu_fields_entity_info() {
     'label' => 'Default',
     'admin' => array(
       'path' => 'admin/structure/menu/settings',
+      'access arguments' => array('administer menu fields'),
     ),
   );
 
@@ -75,7 +64,7 @@ function menu_fields_form_menu_edit_item_submit(&$form, &$form_state) {
 
   if(!isset($form_state['complete form']['original_item']['#value']['mfid']) || $form_state['complete form']['original_item']['#value']['mfid'] == 0) {
     //new entity
-    $save = (object) array('mfid' => NULL, 'mlid' => $form_state['values']['mlid']);
+    $save = (object) array('mfid' => NULL);
     drupal_write_record('menu_fields', $save);
 
     db_update('menu_links')
@@ -87,7 +76,7 @@ function menu_fields_form_menu_edit_item_submit(&$form, &$form_state) {
     field_attach_insert('menu_fields', $save);
   } else {
     //update old entity fields
-    $save = (object)array('mfid' => $form_state['complete form']['original_item']['#value']['mfid'], 'mlid' => $form_state['values']['mlid']);
+    $save = (object) array('mfid' => $form_state['complete form']['original_item']['#value']['mfid']);
     
     field_attach_submit('menu_fields', $save, $form['menu_fields'], $form_state);
     field_attach_update('menu_fields', $save);
@@ -96,13 +85,11 @@ function menu_fields_form_menu_edit_item_submit(&$form, &$form_state) {
  
 /**
  * Implementation of hook_menu()
- * Defines all needed paths to access the menufields administration
- * 
- * @return array containing all new paths
  */
 function menu_fields_menu() {
   $items = array();  
   
+  //define a new default local task for the menu settings page
   $items['admin/structure/menu/settings/edit'] = array(
     'title' => 'Edit',
     'type' => MENU_DEFAULT_LOCAL_TASK,
@@ -113,23 +100,16 @@ function menu_fields_menu() {
 
 /**
  * Implementation of hook_permissions()
- * Defines standard permissions to administer and use menufields
- * 
- * @return array containing standard permissions
  */
 function menu_fields_permission() {
-  return array();
+  return array(
+    'administer menu fields' => array(
+      'title' => t('Administer menu fields'),
+      'description' => t('Edit the fields and displays for menu fields. '),
+    )
+  );
 }
 
-/**
- * Implemenation of hook_theme()
- * Registers all needed theme functions
- * 
- * @return array containing all needed theme functions
- */
-function menu_fields_theme() {
-  return array();
-}
 
 /**
  * Implementation of hook_views_api()
@@ -141,5 +121,3 @@ function menu_fields_views_api() {
     'path' => drupal_get_path('module', 'menu_fields') . '/views', 
   );
 }
-
-//------ CUSTOM FUNCTIONS

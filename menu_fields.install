@@ -20,13 +20,6 @@ function menu_fields_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      'mlid' => array(
-        'description' => 'The corresponding menulink id',
-        'type' => 'int',
-        'size' => 'normal',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
     ),
     'primary key' => array('mfid'),
   );
@@ -51,8 +44,8 @@ function menu_fields_schema_alter(&$schema) {
 
 
 /**
-* Implementation of hook_install().
-*/
+ * Implementation of hook_install().
+ */
 function menu_fields_install() {
   $schema['menu_links'] = array();
   menu_fields_schema_alter($schema);
@@ -62,8 +55,8 @@ function menu_fields_install() {
 }
 
 /**
-* Implementation of hook_uninstall().
-*/
+ * Implementation of hook_uninstall().
+ */
 function menu_fields_uninstall() {
   $schema['menu_links'] = array();
   menu_fields_schema_alter($schema);
