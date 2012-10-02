@@ -20,7 +20,8 @@
       'view modes' => array()
     )
   );
-
+  
+  //just the default bundle
   $options['menu_fields']['bundles']['menu_fields'] = array(
     'label' => 'Menu Fields',
     'admin' => array(
