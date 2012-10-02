@@ -129,7 +129,7 @@ function menu_fields_form_menu_edit_item_submit(&$form, &$form_state) {
     ->condition('mlid', $save->mlid)
     ->execute();
 }
- 
+
 /**
  * Implementation of hook_menu()
  */
@@ -156,7 +156,6 @@ function menu_fields_permission() {
     )
   );
 }
-
 
 /**
  * Implementation of hook_views_api()
