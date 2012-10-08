@@ -17,7 +17,20 @@
         'id' => 'mfid',
       ),
       'bundles' => array(),
-      'view modes' => array()
+      'view modes' => array(
+        /*'full' => array(
+          'label' => t('Full content'), 
+          'custom settings' => FALSE,
+        ), 
+        'teaser' => array(
+          'label' => t('Teaser'), 
+          'custom settings' => TRUE,
+        ), 
+        'rss' => array(
+          'label' => t('RSS'), 
+          'custom settings' => FALSE,
+        ),*/
+      ),
     )
   );
   
@@ -25,7 +38,7 @@
   $options['menu_fields']['bundles']['menu_fields'] = array(
     'label' => 'Menu Fields',
     'admin' => array(
-      'path' => 'admin/structure/menu/settings',
+      'path' => 'admin/structure/menu',
       'access arguments' => array('administer menu fields'),
     ),
   );
@@ -40,7 +53,9 @@
 function menu_fields_form_menu_edit_item_alter(&$form, &$form_state) {
   //get current override status
   $mf_override = (isset($form['original_item']['#value']['mf_override'])) ? $form['original_item']['#value']['mf_override'] : 0;
+  $mf_disable_inheritance = (isset($form['original_item']['#value']['mf_disable_inheritance'])) ? $form['original_item']['#value']['mf_disable_inheritance'] : 0;
     
+  
   //add wrapping fieldset  
   $form['menu_fields'] = array(
     '#type' => 'fieldset',
@@ -57,12 +72,20 @@ function menu_fields_form_menu_edit_item_alter(&$form, &$form_state) {
     );
   }
  
-  //add enable/disable checkbox
+  //add override checkbox
   $form['mf_override'] = array(
     '#type' => 'checkbox',
     '#title' => t('Disable Menu Fields for this item (override)'),
     '#description' => t('Menu Fields is automatically enabled for this link, if there are any values given. With this checkbox you can manually disable menu links for this item, even if values are available.'),
     '#default_value' => $mf_override,
+  );
+ 
+  //add disable inheritance checkbox
+  $form['mf_disable_inheritance'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Disable inheritance for this item'),
+    '#description' => t('If checked, this menu link will not inherit its menu fields to child elements.'),
+    '#default_value' => $mf_disable_inheritance,
   );
  
   //get mfid
@@ -126,7 +149,8 @@ function menu_fields_form_menu_edit_item_submit(&$form, &$form_state) {
   //update status & override
   db_update('menu_links')
     ->fields(array('mf_enabled' => $enabled, 
-                   'mf_override' => $form_state['values']['mf_override']))
+                   'mf_override' => $form_state['values']['mf_override'],
+                   'mf_disable_inheritance' => $form_state['values']['mf_disable_inheritance']))
     ->condition('mlid', $save->mlid)
     ->execute();
 }
@@ -167,4 +191,70 @@ function menu_fields_views_api() {
     'api' => 3, 
     'path' => drupal_get_path('module', 'menu_fields') . '/views', 
   );
+}
+
+/**
+ * Returns the corresponding menu fields entitiy id from the active menulink or its ancestors (inheritance).
+ */
+function menu_fields_get_active_mfid() {
+  $menu = menu_get_active_trail();
+  
+  //sort backwards
+  rsort($menu); 
+  
+  //special links (e.g. user/%) -  check the menu links table for the request_path()
+  if((isset($menu[0]['mfid']) && !$menu[0]['mfid']) || $menu[0]['href'] == '<front>') {
+    //get path
+    $path = request_path();
+   
+    //check for frontpage
+    if($menu[0]['href'] == '<front>') {
+      $path = '<front>';
+    }
+        
+    $menu[0] = menu_fields_get_menulink_from_path($path);
+  }
+ 
+  //run through each menu item and try to find any entity (inheritance)
+  foreach($menu as $key => $item) {
+    //check for last entry (home)
+    if(isset($item['href']) && $item['href'] == '<front>' && empty($item['link_path'])) {
+      $item = menu_fields_get_menulink_from_path('<front>');
+    }
+
+    //check for disabled inheritance
+    if($key > 0 && isset($item['mf_disable_inheritance']) && $item['mf_disable_inheritance']) {
+      continue;
+    }
+        
+    //check for override
+    if(isset($item['mf_override']) && $item['mf_override']) {
+      continue;
+    } 
+  
+    //if enabled and entity id found
+    if(isset($item['mf_enabled']) && $item['mf_enabled'] && isset($item['mfid']) && $item['mfid'] > 0) {
+      return $item['mfid'];
+    }
+  }
+  
+  return NULL;
+}
+
+function menu_fields_get_menulink_from_path($path = NULL) {
+  if($path === NULL) {
+    $path = request_path();
+  }
+  
+  //lookup the database
+  $query = db_select('menu_links', 'ml')
+            ->fields('ml')
+            ->condition('ml.link_path', $path)
+            ->range(0,1);
+
+  if ($item = $query->execute()->fetchAssoc()) {
+    return $item;
+  } else {
+    return NULL;
+  }  
 }

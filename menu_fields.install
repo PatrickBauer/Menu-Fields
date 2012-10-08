@@ -15,13 +15,13 @@ function menu_fields_schema() {
     'description' => 'The base table for the entity',
     'fields' => array(
       'mfid' => array(
-        'description' => 'Primary key for our menufields enitity',
+        'description' => 'Primary key for our menufields enitity.',
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
       'mlid' => array(
-        'description' => 'The corresponding menulink id',
+        'description' => 'The corresponding menulink id.',
         'type' => 'int',
         'size' => 'normal',
         'unsigned' => TRUE,
@@ -45,21 +45,28 @@ function menu_fields_schema_alter(&$schema) {
     'size' => 'normal',
     'not null' => TRUE, 
     'default' => 0, 
-    'description' => 'Foreign key for corresponding menufields id',
+    'description' => 'Foreign key for corresponding menufields id.',
   );
   
   $schema['menu_links']['fields']['mf_enabled'] = array(
     'type' => 'int', 
     'size' => 'tiny',
     'default' => 0, 
-    'description' => 'Boolean to indicate if menu fields is enabled for this particular menulink',
+    'description' => 'Boolean to indicate if menu fields is enabled for this particular menulink.',
   );
   
   $schema['menu_links']['fields']['mf_override'] = array(
     'type' => 'int', 
     'size' => 'tiny',
     'default' => 0, 
-    'description' => 'Boolean to indicate if menu fields status is overridden',
+    'description' => 'Boolean to indicate if menu fields status is overridden.',
+  );
+  
+  $schema['menu_links']['fields']['mf_disable_inheritance'] = array(
+    'type' => 'int', 
+    'size' => 'tiny',
+    'default' => 0, 
+    'description' => 'Boolean to indicate if menu fields will be inherited.',
   );
 }
 
